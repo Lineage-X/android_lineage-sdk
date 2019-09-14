@@ -149,7 +149,7 @@ public class TrustInterface {
     public static final int TRUST_WARN_PUBLIC_KEY = 1 << 2;
 
     /**
-     * Max / default value for warnings status
+     * Max value for warnings status
      *
      * Includes all the TRUST_WARN_
      *
@@ -159,6 +159,15 @@ public class TrustInterface {
     public static final int TRUST_WARN_MAX_VALUE =
             TRUST_WARN_SELINUX |
             TRUST_WARN_PUBLIC_KEY;
+
+    /**
+     * Default value for warnings status
+     *
+     * @see #postNotificationForFeature
+     * @hide
+     */
+    public static final int TRUST_WARN_DEF_VALUE =
+            TRUST_WARN_SELINUX;
 
     private static final String TAG = "TrustInterface";
 
