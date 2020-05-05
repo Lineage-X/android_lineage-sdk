@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2015 The CyanogenMod Project
+ *               2020 The LineageOS Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,9 +27,12 @@ import android.net.wifi.WifiManager;
 import android.nfc.NfcAdapter;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.os.UserHandle;
 import android.provider.Settings;
+import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
+
 import com.android.internal.telephony.RILConstants;
 
 import lineageos.os.Build;
@@ -39,6 +43,7 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * The {@link ConnectionSettings} class allows for creating Network/Hardware overrides
@@ -49,7 +54,7 @@ import java.io.IOException;
  * ConnectionSettings connectionSettings =
  *         new ConnectionSettings(ConnectionSettings.PROFILE_CONNECTION_SYNC,
  *         shouldBeEnabled() ?
- *         {@link BooleanState#STATE_ENABLED} : {@link BooleanState#STATE_DISALED},
+ *         {@link BooleanState#STATE_ENABLED} : {@link BooleanState#STATE_DISABLED},
  *         true)
  * profile.setConnectionSettings(connectionSettings);
  * </pre>
@@ -96,7 +101,10 @@ public final class ConnectionSettings implements Parcelable {
     /**
      * The {@link #PROFILE_CONNECTION_GPS} allows for enabling and disabling the GPS radio (if exists)
      * on the device. Boolean connection settings {@link BooleanState}
+     *
+     * @deprecated Replaced by PROFILE_CONNECTION_LOCATION
      */
+    @Deprecated
     public static final int PROFILE_CONNECTION_GPS = 4;
 
     /**
@@ -104,6 +112,12 @@ public final class ConnectionSettings implements Parcelable {
      * on the device. Boolean connection settings {@link BooleanState}
      */
     public static final int PROFILE_CONNECTION_SYNC = 5;
+
+    /**
+     * The {@link #PROFILE_CONNECTION_LOCATION} allows for enabling and disabling location services
+     * on the device. Boolean connection settings {@link BooleanState}
+     */
+    public static final int PROFILE_CONNECTION_LOCATION = 6;
 
     /**
      * The {@link #PROFILE_CONNECTION_BLUETOOTH} allows for enabling and disabling the Bluetooth device
@@ -134,7 +148,7 @@ public final class ConnectionSettings implements Parcelable {
      */
     public static class BooleanState {
         /** Disabled state */
-        public static final int STATE_DISALED = 0;
+        public static final int STATE_DISABLED = 0;
         /** Enabled state */
         public static final int STATE_ENABLED = 1;
     }
@@ -257,6 +271,7 @@ public final class ConnectionSettings implements Parcelable {
                 (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         TelephonyManager tm = (TelephonyManager)
                 context.getSystemService(Context.TELEPHONY_SERVICE);
+        SubscriptionManager sm = context.getSystemService(SubscriptionManager.class);
         NfcAdapter nfcAdapter = null;
         try {
             nfcAdapter = NfcAdapter.getNfcAdapter(context);
@@ -269,14 +284,17 @@ public final class ConnectionSettings implements Parcelable {
 
         switch (getConnectionId()) {
             case PROFILE_CONNECTION_MOBILEDATA:
-                currentState = tm.getDataEnabled();
-                if (forcedState != currentState) {
-                    int phoneCount = tm.getPhoneCount();
-                    for (int i = 0; i < phoneCount; i++) {
-                        Settings.Global.putInt(context.getContentResolver(),
-                                Settings.Global.MOBILE_DATA + i, (forcedState) ? 1 : 0);
-                        int[] subId = SubscriptionManager.getSubId(i);
-                        tm.setDataEnabled(subId[0], forcedState);
+                List<SubscriptionInfo> list = sm.getActiveSubscriptionInfoList();
+                if (list != null) {
+                    for (int i = 0; i < list.size(); i++) {
+                        int subId = list.get(i).getSubscriptionId();
+                        int slotIndex = list.get(i).getSimSlotIndex();
+                        currentState = tm.getDataEnabled(subId);
+                        if (forcedState != currentState) {
+                            Settings.Global.putInt(context.getContentResolver(),
+                                    Settings.Global.MOBILE_DATA + i, (forcedState) ? 1 : 0);
+                            tm.setDataEnabled(subId, forcedState);
+                        }
                     }
                 }
                 break;
@@ -321,11 +339,11 @@ public final class ConnectionSettings implements Parcelable {
                     bta.disable();
                 }
                 break;
-            case PROFILE_CONNECTION_GPS:
-                currentState = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            case PROFILE_CONNECTION_LOCATION:
+                currentState = lm.isLocationEnabled();
                 if (currentState != forcedState) {
-                    Settings.Secure.setLocationProviderEnabled(context.getContentResolver(),
-                            LocationManager.GPS_PROVIDER, forcedState);
+                    lm.setLocationEnabledForUser(forcedState,
+                            new UserHandle(UserHandle.USER_CURRENT));
                 }
                 break;
             case PROFILE_CONNECTION_SYNC:
