@@ -1035,6 +1035,15 @@ public final class LineageSettings {
                 sBooleanValidator;
 
         /**
+         * boolean value. toggles swipe up hint in gestural nav mode
+         */
+        public static final String NAVIGATION_BAR_HINT = "navigation_bar_hint";
+
+        /** @hide */
+        public static final Validator NAVIGATION_BAR_HINT_VALIDATOR =
+                sBooleanValidator;
+
+        /**
          * Action to perform when the home key is long-pressed.
          * (Default can be configured via config_longPressOnHomeBehavior)
          * 0 - Nothing
@@ -1417,6 +1426,15 @@ public final class LineageSettings {
                 sNonNullStringValidator;
 
         /**
+         * Whether to use black theme for dark mode
+         */
+        public static final String BERRY_BLACK_THEME = "berry_black_theme";
+
+        /** @hide */
+        public static final Validator BERRY_BLACK_THEME_VALIDATOR =
+                sBooleanValidator;
+
+        /**
          * Enable looking up of phone numbers of nearby places
          * 0 = 0ff, 1 = on
          */
@@ -1732,13 +1750,13 @@ public final class LineageSettings {
 
         /**
          * Whether to show the brightness slider in quick settings panel.
-         * 0 = 0ff, 1 = on
+         * 0 = Never, 1 = show when expanded, 2 = show always
          */
         public static final String QS_SHOW_BRIGHTNESS_SLIDER = "qs_show_brightness_slider";
 
         /** @hide */
         public static final Validator QS_SHOW_BRIGHTNESS_SLIDER_VALIDATOR =
-                sBooleanValidator;
+                new InclusiveIntegerRangeValidator(0, 2);
 
         /**
          * Whether to control brightness from status bar
@@ -2232,6 +2250,7 @@ public final class LineageSettings {
             VALIDATORS.put(NAV_BUTTONS, NAV_BUTTONS_VALIDATOR);
             VALIDATORS.put(NAVIGATION_BAR_MENU_ARROW_KEYS,
                     NAVIGATION_BAR_MENU_ARROW_KEYS_VALIDATOR);
+            VALIDATORS.put(NAVIGATION_BAR_HINT, NAVIGATION_BAR_HINT_VALIDATOR);
             VALIDATORS.put(KEY_HOME_LONG_PRESS_ACTION, KEY_HOME_LONG_PRESS_ACTION_VALIDATOR);
             VALIDATORS.put(KEY_HOME_DOUBLE_TAP_ACTION, KEY_HOME_DOUBLE_TAP_ACTION_VALIDATOR);
             VALIDATORS.put(BACK_WAKE_SCREEN, BACK_WAKE_SCREEN_VALIDATOR);
@@ -2274,6 +2293,7 @@ public final class LineageSettings {
             VALIDATORS.put(BERRY_CURRENT_ACCENT, BERRY_CURRENT_ACCENT_VALIDATOR);
             VALIDATORS.put(BERRY_DARK_OVERLAY, BERRY_DARK_OVERLAY_VALIDATOR);
             VALIDATORS.put(BERRY_MANAGED_BY_APP, BERRY_MANAGED_BY_APP_VALIDATOR);
+            VALIDATORS.put(BERRY_BLACK_THEME, BERRY_BLACK_THEME_VALIDATOR);
             VALIDATORS.put(ENABLE_FORWARD_LOOKUP, ENABLE_FORWARD_LOOKUP_VALIDATOR);
             VALIDATORS.put(ENABLE_PEOPLE_LOOKUP, ENABLE_PEOPLE_LOOKUP_VALIDATOR);
             VALIDATORS.put(ENABLE_REVERSE_LOOKUP, ENABLE_REVERSE_LOOKUP_VALIDATOR);
@@ -2941,6 +2961,19 @@ public final class LineageSettings {
          */
         public static final String KILL_APP_LONGPRESS_BACK = "kill_app_longpress_back";
 
+        /**
+         * Whether to exclude the top area of the screen from back gesture
+         * @hide
+         */
+        public static final String GESTURE_BACK_EXCLUDE_TOP = "gesture_back_exclude_top";
+
+        /**
+         * Top to half of the screen height are the valid values
+         * @gide
+         */
+        public static final Validator GESTURE_BACK_EXCLUDE_TOP_VALIDATOR =
+                new InclusiveIntegerRangeValidator(0, 50);
+
         /** Protected Components
          * @hide
          */
@@ -3256,6 +3289,7 @@ public final class LineageSettings {
         public static final Map<String, Validator> VALIDATORS =
                 new ArrayMap<String, Validator>();
         static {
+            VALIDATORS.put(GESTURE_BACK_EXCLUDE_TOP, GESTURE_BACK_EXCLUDE_TOP_VALIDATOR);
             VALIDATORS.put(PROTECTED_COMPONENTS, PROTECTED_COMPONENTS_VALIDATOR);
             VALIDATORS.put(PROTECTED_COMPONENT_MANAGERS, PROTECTED_COMPONENTS_MANAGER_VALIDATOR);
             VALIDATORS.put(NETWORK_TRAFFIC_MODE, NETWORK_TRAFFIC_MODE_VALIDATOR);
